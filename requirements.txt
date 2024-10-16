@@ -1,0 +1,7 @@
+dash==2.7.0               # For building the web application
+dash-bootstrap-components==1.4.0  # For using Bootstrap components in Dash
+pandas==1.5.3             # For data manipulation and analysis
+sqlalchemy==1.4.48        # For database interaction
+psycopg2==2.9.5           # PostgreSQL adapter for Python
+requests==2.28.1          # For making HTTP requests
+plotly==5.13.0            # For data visualization

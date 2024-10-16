@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baseball-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: baseball-pipeline
+  template:
+    metadata:
+      labels:
+        app: baseball-pipeline
+    spec:
+      containers:
+      - name: baseball-pipeline
+        image: your_docker_image_name:latest  # Replace with your Docker image name
+        ports:
+        - containerPort: 8050  # Port where your app is running
+        env:
+        - name: DATABASE_URL
+          value: "postgresql://user:password@hostname:5432/mydatabase"  # Replace with your DB connection string
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: baseball-pipeline-service
+spec:
+  type: LoadBalancer  # Use ClusterIP for internal access only
+  ports:
+  - port: 80
+    targetPort: 8050
+  selector:
+    app: baseball-pipeline
