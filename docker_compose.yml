@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./pipeline/deployment  # Build context is the deployment folder
+      dockerfile: Dockerfile            # Specify the Dockerfile
+    ports:
+      - "8050:8050"  # Adjust according to your app's port
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/mydatabase
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydatabase
+    ports:
+      - "5432:5432"
+
+  airflow:
+    image: apache/airflow:2.4.0
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://user:password@db:5432/mydatabase
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"  # Airflow UI port
