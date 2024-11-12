@@ -1,5 +1,5 @@
 import dash
-from dash import dcc, html  # Updated import for Dash 2.0+
+from dash import dcc, html
 import pandas as pd
 from sqlalchemy import create_engine
 
