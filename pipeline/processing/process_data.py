@@ -7,58 +7,55 @@ from datetime import date
 def fetch_statcast_data(start_date, end_date):
     """Fetch Statcast data from pybaseball between two dates."""
     try:
-        # Fetch data using pybaseball
         df = statcast(start_dt=start_date, end_dt=end_date)
         return df
     except Exception as e:
         print(f"An error occurred while fetching Statcast data: {e}")
-        return pd.DataFrame()  # Return an empty DataFrame
+        return pd.DataFrame()
 
 def process_statcast_data(df):
     """Clean and process Statcast data."""
-    try:
-        # Clean and process data (remove missing values and filter)
-        df.dropna(inplace=True)  # Remove rows with missing values
-        df = df[df['launch_speed'] > 80]  # Filter for hard-hit balls
+    # Any additional processing steps can be added here if needed
+    return df
 
-        # Additional processing can be done here
-        # e.g., df['some_column'] = df['some_column'].apply(some_function)
+def get_latest_date(engine):
+    """Get the latest game_date in the database to avoid duplicate data."""
+    query = "SELECT MAX(game_date) FROM processed_statcast"
+    with engine.connect() as conn:
+        result = conn.execute(query)
+        latest_date = result.scalar()
+    return latest_date
 
-        return df
-    except Exception as e:
-        print(f"An error occurred while processing the data: {e}")
-        return pd.DataFrame()  # Return an empty DataFrame
-
-def save_to_db(df, db_connection_str):
-    """Save processed data to PostgreSQL."""
+def save_to_db(df, engine):
+    """Save processed data to PostgreSQL without duplicating data."""
     if df.empty:
-        print("No data to save to the database.")
+        print("No new data to save to the database.")
         return
     
     try:
-        # Create a database connection
-        engine = create_engine(db_connection_str)
-        
-        # Save the dataframe to a new SQL table
-        df.to_sql('processed_statcast', engine, if_exists='replace', index=False)
-        print("Data saved to database successfully.")
+        df.to_sql('processed_statcast', engine, if_exists='append', index=False)
+        print("New data saved to database successfully.")
     except SQLAlchemyError as e:
         print(f"Error saving data to database: {e}")
 
 if __name__ == "__main__":
-    # Dynamically calculate the season start and end dates
-    current_year = date.today().year
-    start_date = f"{current_year}-03-28"  # Estimated start date for MLB season
-    end_date = f"{current_year}-10-01"    # Estimated end date for regular season
-
-    # Define your database connection string (adjust with your credentials)
+    #DB connection
     db_connection_str = "postgresql://username:password@localhost:5432/baseball"
+    engine = create_engine(db_connection_str)
+
+    # Grab most recent date of uploaded data
+    latest_date = get_latest_date(engine)
+    if latest_date is None:
+        # First time initialization of data or in case of corruption
+        start_date = "2015-03-01"
+    else:
+        # Make start date one day after last date of upload
+        start_date = (latest_date + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
     
-    # Fetch data from pybaseball for the full season
+    # Define the end date as today
+    end_date = date.today()
+
+    # Fetch, process, and save new data
     raw_data = fetch_statcast_data(start_date, end_date)
-    
-    # Process the raw data
     processed_data = process_statcast_data(raw_data)
-    
-    # Save the processed data to the database
-    save_to_db(processed_data, db_connection_str)
+    save_to_db(processed_data, engine)
