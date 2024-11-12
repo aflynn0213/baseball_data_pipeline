@@ -1,0 +1,26 @@
+# Start from the official Apache Spark image with Hadoop support
+FROM apache/spark-py:3.1.2
+
+# Set working directory to the Spark home directory
+WORKDIR /opt/spark
+
+# Copy requirements.txt from the root level of your project into the image
+COPY ../requirements.txt /opt/spark/requirements.txt
+
+# Install any necessary Python packages from requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy your custom Spark configuration file into the image, if needed
+COPY spark-defaults.conf /opt/spark/conf/spark-defaults.conf
+
+# Copy any necessary Spark job scripts into a specific directory
+# e.g., a Python script for training a Stuff+ model
+COPY stuff_plus_model.py /opt/spark/jobs/stuff_plus_model.py
+
+# Expose ports commonly used by Spark (adjust as needed)
+# 7077 for Spark master, 8080 for web UI, etc.
+EXPOSE 7077 8080 8081
+
+# Entry point for Spark jobs (you can comment this out if not always running a specific job)
+# This command can be modified or removed depending on how you intend to use the container.
+# ENTRYPOINT ["spark-submit", "/opt/spark/jobs/stuff_plus_model.py"]

@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: spark-operator
-  namespace: default
+  namespace: default  # Change if using a different namespace
   labels:
     app.kubernetes.io/name: spark-operator
 spec:
@@ -20,5 +20,5 @@ spec:
         - name: spark-operator
           image: gcr.io/spark-operator/spark-operator:v1beta2-1.2.3-3.1.1
           args:
-            - --namespace=default
-            - --enable-webhook
+            - --namespace=default  
+            - --enable-webhook      
